@@ -9,106 +9,66 @@ datasource db {
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  password String?
-  name  String?
-
-  zaps  Zap[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id       Int    @id @default(autoincrement())
+  name     String
+  email    String
+  password String
+  zaps     Zap[]
 }
 
 model Zap {
-  id       Int      @id @default(autoincrement())
-  name     String
-  userId   Int
-
-  // Many-to-one relationship with User // Many zaps can be created by one user
-  user     User     @relation(fields: [userId], references: [id])
-
-  // One-to-one relationship with Trigger // One zap can have only one trigger
-  triggers Trigger?
-
-  // One to many relationship with actions // One zap can have many actions
-  actions Action[]
-
-  zapRuns ZapRun[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String  @id @default(uuid())
+  triggerId    String
+  userId       Int
+  trigger      Trigger?
+  actions      Action[]
+  zapRuns      ZapRun[]
+  user         User @relation(fields: [userId], references: [id])
 }
 
 model Trigger {
-    id Int @id  @default(autoincrement())
-    triggerId Int
-
-    // One to one relationship with zap. // One zap can have only one trigger.
-    zapId Int @unique
-    zap Zap @relation(fields: [zapId], references: [id])
-
-    // Many to one relationship with available triggers.
-    availableTriggerId Int
-    availableTrigger AvailableTrigger @relation(fields: [availableTriggerId], references: [id])
-
-    sortingOrder Int @default(0)
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  id          String  @id @default(uuid())
+  zapId       String  @unique
+  triggerId   String
+  metadata    Json  @default("{}")
+  type  AvailableTrigger @relation(fields: [triggerId], references: [id])
+  zap  Zap                @relation(fields: [zapId], references: [id])
 }
 
 model Action {
-    id       Int      @id @default(autoincrement())
-    actionId Int
+  id        String  @id @default(uuid())
+  zapId     String
+  zap       Zap     @relation(fields: [zapId], references: [id])
+  actionId  String
+  metadata    Json  @default("{}")
+  type      AvailableAction @relation(fields: [actionId], references: [id])
+  sortingOrder Int    @default(0)
+}
 
-    // Many to one relationship with zap // Many actions can be for one zap
-    zapId    Int
-    zap      Zap     @relation(fields: [zapId], references: [id])
-
-    // Many-to-one relationship with AvailableActions // Many actions can be of the same one type ( only 1 ).
-    availableActionId Int
-    availableAction   AvailableActions @relation(fields: [availableActionId], references: [id])
-
-    createdAt         DateTime @default(now())
-    updatedAt         DateTime @updatedAt
+model AvailableAction {
+  id       String @id @default(uuid())
+  name     String
+  image    String
+  actions  Action[]
 }
 
 model AvailableTrigger {
-    id Int @id @default(autoincrement())
-    name String
-    image String
-
-    triggers Trigger[]
-}
-
-model AvailableActions {
-    id  Int @id @default(autoincrement())
-    name String
-    image String
-
-    actions Action[]
+  id       String @id @default(uuid())
+  name     String
+  image    String
+  triggers Trigger[]
 }
 
 model ZapRun {
-    id Int @id @default(autoincrement())
-    zapId Int
-    zap Zap @relation(fields: [zapId], references: [id])
-
-    metaData Json
-
-    zapRunOutbox ZapRunOutbox?
-
-    createdAt      DateTime @default(now())
-    updatedAt      DateTime @updatedAt
+  id           String @id @default(uuid())
+  zapId        String
+  metadata     Json
+  zap          Zap @relation(fields: [zapId], references: [id])
+  zapRunOutbox ZapRunOutbox?
 }
 
 model ZapRunOutbox {
-    id Int @id @default(autoincrement())
-
-    zapRunId Int @unique
-    zapRun ZapRun @relation(fields: [zapRunId], references: [id])
-
-    createdAt  DateTime @default(now())
-    updatedAt  DateTime @updatedAt
+  id          String @id @default(uuid())
+  zapRunId    String @unique
+  zapRun      ZapRun @relation(fields: [zapRunId], references: [id])
 }

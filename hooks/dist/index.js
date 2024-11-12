@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const client_1 = require("@prisma/client");
 const client = new client_1.PrismaClient();
+const port = 3002;
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.post("/hooks/catch/:userId/:zapId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -25,8 +26,8 @@ app.post("/hooks/catch/:userId/:zapId", (req, res) => __awaiter(void 0, void 0, 
     yield client.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
         const run = yield tx.zapRun.create({
             data: {
-                zapId: parseInt(zapId),
-                metaData: body
+                zapId: zapId,
+                metadata: body
             }
         });
         ;
@@ -40,4 +41,6 @@ app.post("/hooks/catch/:userId/:zapId", (req, res) => __awaiter(void 0, void 0, 
         message: "Webhook received"
     });
 }));
-app.listen(3002);
+app.listen(port, () => {
+    console.log(`Hooks server running on port ${port}`);
+});

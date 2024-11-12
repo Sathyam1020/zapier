@@ -3,6 +3,8 @@ import { PrismaClient } from "@prisma/client"
 
 const client = new PrismaClient();
 
+const port = 3002;
+
 const app = express();
 app.use(express.json());
 
@@ -15,8 +17,8 @@ app.post("/hooks/catch/:userId/:zapId", async (req, res) => {
     await client.$transaction(async tx => {
         const run = await tx.zapRun.create({
             data: {
-                zapId: parseInt(zapId),
-                metaData: body
+                zapId: zapId,
+                metadata: body
             }
         });;
         await tx.zapRunOutbox.create({
@@ -30,4 +32,6 @@ app.post("/hooks/catch/:userId/:zapId", async (req, res) => {
     })
 })
 
-app.listen(3002);
+app.listen(port, () => {
+    console.log(`Hooks server running on port ${port}`)
+});

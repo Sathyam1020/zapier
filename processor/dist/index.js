@@ -17,29 +17,45 @@ const kafka = new kafkajs_1.Kafka({
     clientId: 'outbox-processor',
     brokers: ['localhost:9092']
 });
-function main() {
+function processOutbox() {
     return __awaiter(this, void 0, void 0, function* () {
         const producer = kafka.producer();
         yield producer.connect();
-        while (1) {
-            const pendingRows = yield client.zapRunOutbox.findMany({
-                where: {},
-                take: 10
-            });
-            yield producer.send({
-                topic: TOPIC_NAME,
-                messages: pendingRows.map(r => ({
-                    value: JSON.stringify(r.zapRunId)
-                }))
-            });
-            yield client.zapRunOutbox.deleteMany({
-                where: {
-                    id: {
-                        in: pendingRows.map(r => r.id)
-                    }
+        try {
+            while (true) {
+                // Get the entries from the db
+                const pendingRows = yield client.zapRunOutbox.findMany({
+                    where: {},
+                    take: 10
+                });
+                if (pendingRows.length > 0) {
+                    // Send it to Kafka queue
+                    yield producer.send({
+                        topic: TOPIC_NAME,
+                        messages: pendingRows.map(r => ({
+                            value: JSON.stringify(r.zapRunId)
+                        }))
+                    });
+                    // Delete it from the entry/db
+                    yield client.zapRunOutbox.deleteMany({
+                        where: {
+                            id: {
+                                in: pendingRows.map(r => r.id)
+                            }
+                        }
+                    });
                 }
-            });
+                // Delay for a short period to prevent high CPU usage
+                yield new Promise(resolve => setTimeout(resolve, 3000)); // 3 second delay
+            }
+        }
+        catch (error) {
+            console.error("Error processing outbox:", error);
+        }
+        finally {
+            yield producer.disconnect();
+            yield client.$disconnect();
         }
     });
 }
-main();
+processOutbox();
