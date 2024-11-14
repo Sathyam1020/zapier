@@ -83,7 +83,7 @@ const Dashboard = () => {
     const router = useRouter();
   return (
     <div className=''>
-        <div className=''>
+        <div className='mb-10'>
             {
                 zaps.length > 0 ? <div className='w-full text-center font-semibold mb-10'>
                     You have {zaps.length} {zaps.length > 1 ? "zaps" : "zap"} active.
@@ -119,8 +119,34 @@ function ZapTable({ zaps }: {zaps: Zap[]}) {
                         {
                             zaps.map((zap, index) => (
                                 <TableRow key={index}>
-                                    <TableCell className='flex-1 flex'>
-                                        <Image alt='image' src={zap.trigger.type.image} className="w-[30px] h-[30px]"/>{zap.actions.map(x => <Image key={x.type.image} alt='image' src={x.type.image} className="w-[30px] h-[30px]" />)}
+                                    <TableCell>
+                                    <div className="flex overflow-x-scroll scrollbar-none">
+                                        <img
+                                        alt="image"
+                                        src={zap.trigger.type.image}
+                                        className="w-[30px] h-[30px] rounded-full"
+                                        />
+                                        {zap.actions.slice(0, 3).map((x, index) => (
+                                        <img
+                                            key={index}
+                                            alt="image"
+                                            src={x.type.image}
+                                            className="w-[30px] h-[30px] rounded-full"
+                                        />
+                                        ))}
+                                        {zap.actions.length > 3 && (
+                                        <div className="flex">
+                                            {zap.actions.slice(3).map((x, index) => (
+                                            <img
+                                                key={index}
+                                                alt="image"
+                                                src={x.type.image}
+                                                className="w-[30px] h-[30px] rounded-full"
+                                            />
+                                            ))}
+                                        </div>
+                                        )}
+                                    </div>
                                     </TableCell>
                                     <TableCell>
                                         {zap.id}
